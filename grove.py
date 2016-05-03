@@ -1,4 +1,5 @@
 import sys
+import importlib
 
 #Error
 class GroveError(Exception):
@@ -84,9 +85,11 @@ class SetConstructor(Stmt):
         self.obj = obj
     
     def eval(self):
-        check(type(self.obj) == type(object), "Expected an object type for new command")
-        var_table[self.varname.name] = eval(self.obj)()
-
+        try:
+            check(type(eval(self.obj)) == type(object), "Expected an object type for new command")
+            var_table[self.varname.name] = eval(self.obj)()
+        except:
+            raise GroveError("Grove: Could not set object properly")
 class Exit(Stmt):
     def eval(self):
         sys.exit()
@@ -96,7 +99,12 @@ class Import(Stmt):
     def __init__(self, name):
         self.name = name
     def eval(self):
-        importlib.import_module
+        try:
+            mod = importlib.import_module(self.name)
+            globals()[self.name] = mod
+        except:
+            raise GroveError("GROVE: error importing the module")
+        
 
 #Interpreter
 def parse(s):
@@ -170,7 +178,6 @@ def parse_tokens(tokens):
         check(len(tokens) > 0, "incomplete set expression")
         expect(tokens[0], "=")
         if tokens[1] == "new":
-            
             obj = tokens[2]
             return ( SetConstructor(varname, obj), tokens[3:] )
         else:
@@ -181,8 +188,12 @@ def parse_tokens(tokens):
         return ( Exit(), tokens[1:] )
     #import
     elif start == "import":
-        (name, tokens) = parse_tokens(tokens[1:])
-        return ( Import(name), tokens )
+
+        
+        check(len(tokens) > 1, "must provide module to import")
+        name = tokens[1]
+        #(name, tokens) = parse_tokens(tokens[2:])
+        return ( Import(name), tokens[2:] )
     else:
         #print(start)
         isAlphaOr_ = start.replace("_", "a").isalnum() and not is_int(start[0]) and not "\"" in start
@@ -212,7 +223,7 @@ def is_int(s):
         return True
     except ValueError:
         return False
-        
+
 #Console
 while True:
     try:        

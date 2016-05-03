@@ -1,0 +1,9 @@
+set a = 3
+set b = "hi"
+set c = + ( 3 ) ( 5 )
+set d = + ( "x" ) ( + ( "y" ) ( "z" ) )
+import os
+import sys
+set f = new __builtins__.list
+set g = new __builtins__.tuple
+exit
